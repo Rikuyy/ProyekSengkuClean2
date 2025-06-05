@@ -353,7 +353,7 @@ void importdb() {
  Connection con = Connector.getkoneksi(); // Make sure koneksi class exists and getkoneksi() is static
     Statement ps = con.createStatement();
             String query = "SELECT p.nama_pelanggan, pe.no_hp, b.merk, k.nama, " +
-               "t.tanggal, p.jenis_layanan, t.total " +
+               "t.tanggal, p.layanan, t.total " +
                "FROM transaksipemesanan t " +
                "LEFT JOIN pesanan p ON t.id_transaksi = p.id_transaksi " +
                "LEFT JOIN pelanggan pe ON t.id_pelanggan = pe.id_pelanggan " +
@@ -374,7 +374,7 @@ while(rs.next()) {
     String Merek = rs.getString("merk");
     String petugas = rs.getString("nama");
     String Tanggal = rs.getString("tanggal");
-    String Type = rs.getString("jenis_layanan");    
+    String Type = rs.getString("layanan");    
     int totalValue = rs.getInt("total");
 
     totalKeseluruhan += totalValue;
@@ -448,7 +448,7 @@ void importdb(String filter) {
         }
 
         String query = "SELECT p.nama_pelanggan, pe.no_hp, b.merk, k.nama, " +
-               "t.tanggal, p.jenis_layanan, t.total " +
+               "t.tanggal, p.layanan, t.total " +
                "FROM transaksipemesanan t " +
                "LEFT JOIN pesanan p ON t.id_transaksi = p.id_transaksi " +
                "LEFT JOIN pelanggan pe ON t.id_pelanggan = pe.id_pelanggan " +
@@ -468,7 +468,7 @@ while(rs.next()) {
     String Merek = rs.getString("merk");
     String petugas = rs.getString("nama");
     String Tanggal = rs.getString("tanggal");
-    String Type = rs.getString("jenis_layanan");    
+    String Type = rs.getString("layanan");    
     int totalValue = rs.getInt("total");
 
     totalKeseluruhan += totalValue;
