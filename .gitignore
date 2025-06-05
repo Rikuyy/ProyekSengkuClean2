@@ -1,0 +1,21 @@
+# Folder build (hasil kompilasi)
+build/
+
+# NetBeans project files
+nbproject/private/
+
+# File kelas hasil kompilasi
+*.class
+
+# File log atau sementara
+*.log
+*.tmp
+*.bak
+
+# Cache IDE
+.idea/
+*.iml
+
+# OS-generated
+.DS_Store
+Thumbs.db
