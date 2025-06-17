@@ -1,7 +1,7 @@
 package EmployeeClass;
 
 public class EmployeeData {
-    private String id;
+    private String id_karyawan;
     private String nama;
     private int usia;
     private String alamat;
@@ -10,8 +10,8 @@ public class EmployeeData {
     private byte[] foto; 
 
     // Konstruktor lengkap (biasanya untuk data yang sudah ada di DB)
-    public EmployeeData(String id, String nama, int usia, String alamat, String telepon, String email, byte[] foto) {
-        this.id = id;
+    public EmployeeData(String id_karyawan, String nama, int usia, String alamat, String telepon, String email, byte[] foto) {
+        this.id_karyawan = id_karyawan;
         this.nama = nama;
         this.usia = usia;
         this.alamat = alamat;
@@ -22,7 +22,7 @@ public class EmployeeData {
 
     // Konstruktor untuk data baru tanpa id (id akan di-generate di DB)
     public EmployeeData(String nama, int usia, String alamat, String telepon, String email, byte[] foto) {
-        this.id = null; // atau kosong ""
+        this.id_karyawan = null; // atau kosong ""
         this.nama = nama;
         this.usia = usia;
         this.alamat = alamat;
@@ -33,10 +33,10 @@ public class EmployeeData {
 
     // Getter dan setter
     public String getId() {
-        return id;
+        return id_karyawan;
     }
-    public void setId(String id) {
-        this.id = id;
+    public void setId(String id_karyawan) {
+        this.id_karyawan = id_karyawan;
     }
 
     public String getNama() {

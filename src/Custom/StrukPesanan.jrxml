@@ -7,7 +7,7 @@
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
 	<queryString>
-		<![CDATA[SELECT t.id_transaksi, pe.nama, CONCAT(b.merk,' ',b.warna) AS detail, t.total, t.Bayar, t.Kembali, k.nama, t.tanggal, t.waktu, p.tanggal_selesai AS estimasi, p.layanan, k.nama AS Kasir, t.Barcode, CONCAT('C:/Users/MyBook Hype AMD/Documents/NetBeansProjects/ProjectS2BackUp/', t.BarcodePath) AS ImgBarcode
+		<![CDATA[SELECT t.id_transaksi, pe.nama, CONCAT(b.merk,' ',b.warna) AS detail, t.total, t.Bayar, t.Kembali, k.nama, t.tanggal, t.waktu, p.tanggal_selesai AS estimasi, p.layanan, k.nama AS Kasir, t.Barcode, CONCAT('C:\Users\MyBook Hype AMD\Documents\NetBeansProjects\AplikasiSengkuclean\ProyekSengkuClean2/', t.BarcodePath) AS ImgBarcode
 From transaksipemesanan t
 LEFT JOIN pesanan p ON t.id_transaksi = p.id_transaksi
 LEFT JOIN pelanggan pe ON t.id_pelanggan = pe.id_pelanggan

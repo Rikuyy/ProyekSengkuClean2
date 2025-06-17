@@ -1,4 +1,4 @@
-package EmployeeClass;
+ package EmployeeClass;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 

@@ -5,9 +5,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger; 
 
 public class CleaningPanel extends JPanel {
-
+private AddOrder.OrderListener orderListener;
+   
+    public void setOrderListener(AddOrder.OrderListener listener) {
+        this.orderListener = listener;
+        }
     public CleaningPanel(Dashboard dashboard) {
         setLayout(null);
         setBackground(Color.WHITE);
@@ -34,31 +43,38 @@ public class CleaningPanel extends JPanel {
         add(header);
 
         // REGULER
-        JLabel reguler = new JLabel();
-        reguler.setIcon(new FlatSVGIcon("SVGClean/Reguler.svg"));
-        reguler.setHorizontalAlignment(SwingConstants.CENTER);
-        reguler.setBounds(100, 80, 440, 200);
+        JLabel reguler = ServiceLabel("SVGClean/Reguler.svg", 100, 80, 1);
         add(reguler);
 
-        // DEEP
-        JLabel deep = new JLabel();
-        deep.setIcon(new FlatSVGIcon("SVGClean/Deep.svg"));
-        deep.setHorizontalAlignment(SwingConstants.CENTER);
-        deep.setBounds(580, 80, 440, 200);
+        // DEEP - index 2
+        JLabel deep = ServiceLabel("SVGClean/Deep.svg", 580, 80, 2);
         add(deep);
 
-        // UNYELLOWING
-        JLabel unyellowing = new JLabel();
-        unyellowing.setIcon(new FlatSVGIcon("SVGClean/Unyellowing.svg"));
-        unyellowing.setHorizontalAlignment(SwingConstants.CENTER);
-        unyellowing.setBounds(100, 310, 440, 200);
+        // UNYELLOWING - index 3
+        JLabel unyellowing = ServiceLabel("SVGClean/Unyellowing.svg", 100, 310, 3);
         add(unyellowing);
 
-        // WHITENING
-        JLabel whitening = new JLabel();
-        whitening.setIcon(new FlatSVGIcon("SVGClean/Whitening.svg"));
-        whitening.setHorizontalAlignment(SwingConstants.CENTER);
-        whitening.setBounds(580, 310, 440, 200);
+        // WHITENING - index 4
+        JLabel whitening = ServiceLabel("SVGClean/Whitening.svg", 580, 310, 4);
         add(whitening);
     }
+    private JLabel ServiceLabel(String iconPath, int x, int y, int serviceIndex) {
+        JLabel label = new JLabel(new FlatSVGIcon(iconPath));
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        label.setBounds(x, y, 440, 200);
+        label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        label.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                SelectedService(serviceIndex);
+            }
+        });
+        return label;
+    }
+    private void SelectedService(int serviceIndex) {
+    AddOrder addOrder = new AddOrder((java.awt.Frame) SwingUtilities.getWindowAncestor(this), true);
+    addOrder.setSelectedServiceIndex(serviceIndex);
+    addOrder.setVisible(true); 
+    }
+    
 }
