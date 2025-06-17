@@ -1,4 +1,4 @@
-package DAO;
+  package DAO;
 
 import Custom.Connector;
 import EmployeeClass.EmployeeData;
@@ -15,8 +15,8 @@ public class EmployeeDAO {
     }
 
     public boolean insertEmployee(EmployeeData employee) throws SQLException {
-        String sql = "INSERT INTO employees (nama, usia, alamat, telepon, email, foto) "
-                   + "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO karyawan (nama, usia, alamat, no_hp, email, foto) "
+                   + "VALUES (?, ?, ?, ?, ?, ?)"; 
 
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, employee.getNama());
@@ -47,15 +47,15 @@ public class EmployeeDAO {
         }
     }
     
-    public EmployeeData findById(String id) throws SQLException {
-        String sql = "SELECT id, nama, usia, alamat, telepon, email, foto FROM employees WHERE id = ?";
+    public EmployeeData findById(String id_karyawan) throws SQLException {
+        String sql = "SELECT id_karyawan, nama, usia, alamat, telepon, email, foto FROM karyawan WHERE id_karyawan = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
+            stmt.setString(1, id_karyawan);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new EmployeeData(
-                        rs.getString("id"),
+                        rs.getString("id_karyawan"),
                         rs.getString("nama"),
                         rs.getInt("usia"),
                         rs.getString("alamat"),
@@ -71,8 +71,8 @@ public class EmployeeDAO {
     }
 
     public boolean updateEmployee(EmployeeData data) throws SQLException {
-        String sql = "UPDATE employees SET nama = ?, usia = ?, alamat = ?, telepon = ?, email = ? "
-                   + "WHERE id = ?";
+        String sql = "UPDATE karyawan SET nama = ?, usia = ?, alamat = ?, telepon = ?, email = ? "
+                   + "WHERE id_karyawan = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, data.getNama());
             stmt.setInt(2, data.getUsia());
@@ -85,15 +85,15 @@ public class EmployeeDAO {
         }
     }
     
-    public boolean hapusData(String id) throws SQLException {        
-        String sqlDeleteHistory = "DELETE FROM service_history WHERE employee_id = ?";
+    public boolean hapusData(String id_karyawan) throws SQLException {        
+        String sqlDeleteHistory = "DELETE FROM transaksipemesanan WHERE id_karyawan = ?";
         try (PreparedStatement stmt1 = conn.prepareStatement(sqlDeleteHistory)) {
-            stmt1.setString(1, id);
+            stmt1.setString(1, id_karyawan);
             stmt1.executeUpdate();
         }
-        String sqlDeleteEmp = "DELETE FROM employees WHERE id = ?";
+        String sqlDeleteEmp = "DELETE FROM karyawan WHERE id_karyawan = ?";
         try (PreparedStatement stmt2 = conn.prepareStatement(sqlDeleteEmp)) {
-            stmt2.setString(1, id);
+            stmt2.setString(1, id_karyawan);
             int affected = stmt2.executeUpdate();
             return affected == 1;
         }
@@ -101,7 +101,7 @@ public class EmployeeDAO {
 
     public List<EmployeeData> getAllEmployees() throws SQLException {
         List<EmployeeData> list = new ArrayList<>();
-        String sql = "SELECT id, nama, usia, alamat, telepon, email, foto FROM employees ORDER BY id";
+        String sql = "SELECT id_karyawan , nama, usia, alamat, no_hp, email, foto FROM karyawan ORDER BY id_karyawan";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -114,11 +114,11 @@ public class EmployeeDAO {
                 }
 
                 list.add(new EmployeeData(
-                    rs.getString("id"),
+                    rs.getString("id_karyawan"),
                     rs.getString("nama"),
                     rs.getInt("usia"),
                     rs.getString("alamat"),
-                    rs.getString("telepon"),
+                    rs.getString("no_hp"),
                     rs.getString("email"),
                     fotoBytes
                 ));
@@ -128,7 +128,7 @@ public class EmployeeDAO {
     }
 
     public boolean emailExists(String email) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM employees WHERE email = ?";
+        String sql = "SELECT COUNT(*) FROM karyawan WHERE email = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, email);
             try (ResultSet rs = stmt.executeQuery()) {

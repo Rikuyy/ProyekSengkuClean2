@@ -19,3 +19,4 @@ nbproject/private/
 # OS-generated
 .DS_Store
 Thumbs.db
+/dist/

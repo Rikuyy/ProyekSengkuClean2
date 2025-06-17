@@ -129,33 +129,33 @@ public class DetailPanel extends JPanel {
         infoPanel.add(contentPanel, BorderLayout.CENTER);
 
         // === TABEL RIWAYAT SERVIS ===
-        String[] columnNames = {"No", "Nama Pelanggan", "No HP", "Barang", "Merk", "Nama Karyawan", "Waktu", "Tipe"};
+        String[] columnNames = {"No", "Nama Pelanggan", "No HP", "Merk", "Waktu", "Tipe"};
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
 
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/sengkuclean2", "root", "");
-             PreparedStatement stmt = conn.prepareStatement(
-                     "SELECT sh.id_transaksi, p.nama_pelanggan`, pe.no_hp, " +
-                             "p.nama_barang, b.merk AS Merk, p.nama_barang`, " +
-                             "t.waktu, p.layanan " +
-                             "FROM service_history sh " +
-                             "JOIN employees e ON sh.employee_id = e.id " +
-                             "JOIN barang b ON sh.id_barang = b.id_barang " +
-                             "JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan " +
-                             "WHERE sh.employee_id = ? ORDER BY sh.id"
+            PreparedStatement stmt = conn.prepareStatement(
+                "SELECT t.id_transaksi AS id, p.nama_pelanggan AS nama_pelanggan, " +
+                "pe.no_hp AS no_hp, p.nama_barang AS barang, p.nama_barang AS nama_barang, " +
+                "t.waktu AS waktu, p.layanan AS tipe " +
+                "FROM pesanan p " +
+                "LEFT JOIN transaksipemesanan t ON t.id_transaksi = p.id_transaksi " +
+                "LEFT JOIN pelanggan pe ON p.id_pelanggan = pe.id_pelanggan " +
+                "LEFT JOIN karyawan k ON t.id_karyawan = k.id_karyawan " +
+                "WHERE t.id_karyawan = ? " +
+                "ORDER BY t.id_transaksi"
              )
         ) {
             stmt.setString(1, data.getId());
             ResultSet rs = stmt.executeQuery();
+            int no = 1;
             while (rs.next()) {
                 tableModel.addRow(new Object[]{
-                        rs.getInt("id"),
-                        rs.getString("Nama Pelanggan"),
-                        rs.getString("No HP"),
-                        rs.getString("Barang"),
-                        rs.getString("Merk"),
-                        rs.getString("Nama Karyawan"),
-                        rs.getString("Waktu"),
-                        rs.getString("Tipe")
+                    no++,
+                    rs.getString("nama_pelanggan"),
+                    rs.getString("no_hp"),                    
+                    rs.getString("nama_barang"),                    
+                    rs.getString("waktu"),
+                    rs.getString("tipe")
                 });
             }
         } catch (Exception ex) {
