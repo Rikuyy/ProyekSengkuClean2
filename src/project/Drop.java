@@ -4,8 +4,15 @@
  */
 package project;
 
-import Custom.Connector;
+import Custom.ConnectorH;
+import Custom.RoundedSearchField;
+import Custom.RoundedLine;
+import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
 import java.awt.Frame;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -18,11 +25,19 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.UIManager;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.view.JasperViewer;
+import project.UpdateOrder.DataUpdateListener;
 
 
 /**
@@ -31,16 +46,46 @@ import net.sf.jasperreports.view.JasperViewer;
  */
 public class Drop extends javax.swing.JPanel {
 private Connection conn;
-    
-
+private Map<Integer, Map<String, String>> 
+      additionalOrderData = new HashMap<>();
     /**
      * Creates new form Drop
      */
-    public Drop() {
+    public Drop() throws SQLException {
         initComponents();
+        RoundedSearchField searchField = new RoundedSearchField(20);
+
+// Icon search
+        ImageIcon icon = new FlatSVGIcon("SVGDrp/bt_Search.svg", 22, 19);
+        JLabel searchIcon = new JLabel(icon);
+        searchIcon.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+        searchIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        searchIcon.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                String searchText = searchField.getText();
+                try {
+                    search(searchText);
+                    Lb_return.setVisible(true);
+                  }catch (SQLException ex) {
+                     Logger.getLogger(Drop.class.getName()).log(Level.SEVERE, null, ex);
+                  }
+                System.out.println("Cari: " + searchText);
+            }
+        });
+        // Panel gabungan
+        JPanel searchPanel = new JPanel(new BorderLayout(5, 5));
+        searchPanel.setOpaque(false);
+        searchPanel.add(searchField, BorderLayout.CENTER);
+        searchPanel.add(searchIcon, BorderLayout.EAST);
+        Pnl_Search.setLayout(new BorderLayout()); 
+        Pnl_Search.add(searchPanel, BorderLayout.CENTER);
+        Pnl_Search.setBorder(new RoundedLine(new Color(61, 194, 236), 2, 20));
         importdb();
-        conn = Connector.getkoneksi();
-        Lb_Search.setIcon(new FlatSVGIcon("SVGDrp/bt_Search.svg", 22, 19));
+        
+        conn = ConnectorH.getConnection();
+        Lb_return.setIcon(new FlatSVGIcon("SVGDrp/Bt_return.svg", 22, 19));
+        Lb_return.setVisible(false);
         Lb_Drop.setIcon(new FlatSVGIcon("SVGDrp/Drop.svg", 108, 37));
         
     }
@@ -58,17 +103,17 @@ private Connection conn;
         jButton3 = new javax.swing.JButton();
         Bt_add = new javax.swing.JButton();
         Bt_Drop = new javax.swing.JButton();
-        Tf_search = new javax.swing.JTextField();
+        Lb_return = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tabeldrop = new javax.swing.JTable();
-        Lb_Search = new javax.swing.JLabel();
         Lb_Drop = new javax.swing.JLabel();
-        Bt_Frglu = new javax.swing.JButton();
-        Bt_Fclean = new javax.swing.JButton();
-        Bt_Fripen = new javax.swing.JButton();
         Bt_Fbag = new javax.swing.JButton();
         Bt_Print = new javax.swing.JButton();
         Bt_FCap = new javax.swing.JButton();
+        Bt_FRipen = new javax.swing.JButton();
+        Bt_FRglu = new javax.swing.JButton();
+        Bt_FCleaning = new javax.swing.JButton();
+        Pnl_Search = new javax.swing.JPanel();
 
         setBackground(new java.awt.Color(255, 255, 255));
 
@@ -92,15 +137,9 @@ private Connection conn;
             }
         });
 
-        Tf_search.setText("Search");
-        Tf_search.addMouseListener(new java.awt.event.MouseAdapter() {
+        Lb_return.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                Tf_searchMouseClicked(evt);
-            }
-        });
-        Tf_search.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                Tf_searchActionPerformed(evt);
+                Lb_returnMouseClicked(evt);
             }
         });
 
@@ -112,34 +151,20 @@ private Connection conn;
                 "No", "ID Transaksi", "Nama", "No. Handphone", "Merk", "Service", "Time", "Type"
             }
         ));
-        jScrollPane1.setViewportView(tabeldrop);
-
-        Lb_Search.addMouseListener(new java.awt.event.MouseAdapter() {
+        tabeldrop.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                Lb_SearchMouseClicked(evt);
+                tabeldropMouseClicked(evt);
             }
         });
-
-        Bt_Frglu.setIcon(new FlatSVGIcon("SVGDrp/Reglue.svg", 225, 126));
-        Bt_Frglu.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                Bt_FrgluActionPerformed(evt);
-            }
-        });
-
-        Bt_Fclean.setIcon(new FlatSVGIcon("SVGDrp/Cleaning.svg", 225, 126));
-        Bt_Fclean.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                Bt_FcleanActionPerformed(evt);
-            }
-        });
-
-        Bt_Fripen.setIcon(new FlatSVGIcon("SVGDrp/Repaint.svg", 225, 126));
-        Bt_Fripen.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                Bt_FripenActionPerformed(evt);
-            }
-        });
+        jScrollPane1.setViewportView(tabeldrop);
+        if (tabeldrop.getColumnModel().getColumnCount() > 0) {
+            tabeldrop.getColumnModel().getColumn(0).setResizable(false);
+            tabeldrop.getColumnModel().getColumn(0).setPreferredWidth(20);
+            tabeldrop.getColumnModel().getColumn(2).setResizable(false);
+            tabeldrop.getColumnModel().getColumn(2).setPreferredWidth(100);
+            tabeldrop.getColumnModel().getColumn(7).setResizable(false);
+            tabeldrop.getColumnModel().getColumn(7).setPreferredWidth(150);
+        }
 
         Bt_Fbag.setIcon(new FlatSVGIcon("SVGDrp/Bag.svg", 225, 126));
         Bt_Fbag.addActionListener(new java.awt.event.ActionListener() {
@@ -165,38 +190,69 @@ private Connection conn;
             }
         });
 
+        Bt_FRipen.setIcon(new FlatSVGIcon("SVGDrp/Repaint.svg", 225, 126));
+        Bt_FRipen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                Bt_FRipenActionPerformed(evt);
+            }
+        });
+
+        Bt_FRglu.setIcon(new FlatSVGIcon("SVGDrp/Reglue.svg", 225, 126));
+        Bt_FRglu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                Bt_FRgluActionPerformed(evt);
+            }
+        });
+
+        Bt_FCleaning.setIcon(new FlatSVGIcon("SVGDrp/Cleaning.svg", 225, 126));
+        Bt_FCleaning.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                Bt_FCleaningActionPerformed(evt);
+            }
+        });
+
+        Pnl_Search.setBackground(new java.awt.Color(255, 255, 255));
+
+        javax.swing.GroupLayout Pnl_SearchLayout = new javax.swing.GroupLayout(Pnl_Search);
+        Pnl_Search.setLayout(Pnl_SearchLayout);
+        Pnl_SearchLayout.setHorizontalGroup(
+            Pnl_SearchLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+        Pnl_SearchLayout.setVerticalGroup(
+            Pnl_SearchLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 44, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(23, 23, 23)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(Lb_Drop, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(Tf_search, javax.swing.GroupLayout.PREFERRED_SIZE, 370, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(Lb_Search, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(Bt_Fclean, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(Bt_Frglu, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(Bt_Fripen, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(Bt_Fbag, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(Bt_FCap, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(Bt_add, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(Bt_Print, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(Lb_Drop, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGroup(layout.createSequentialGroup()
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 743, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(Bt_FCleaning, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(Bt_FRglu, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(Bt_FRipen, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(Bt_Fbag, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(Bt_FCap, javax.swing.GroupLayout.PREFERRED_SIZE, 225, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(Bt_add, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGap(18, 18, 18)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(Bt_Drop, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(Bt_Print, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                            .addComponent(Bt_Drop, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(30, 30, 30)
+                            .addComponent(Pnl_Search, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(Lb_return, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING))
                 .addContainerGap(27, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -204,29 +260,25 @@ private Connection conn;
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(Lb_Drop, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 84, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(Bt_Fbag, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(Bt_FCap, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(Bt_Frglu, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 126, Short.MAX_VALUE)
-                        .addComponent(Bt_Fclean, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(Bt_Fripen, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addGap(48, 48, 48)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(Tf_search, javax.swing.GroupLayout.DEFAULT_SIZE, 34, Short.MAX_VALUE)
-                    .addComponent(Lb_Search, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(Bt_FRipen, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(Bt_FCleaning, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(Bt_FRglu, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(Pnl_Search, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(Lb_return, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(Bt_add, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(Bt_Drop, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(Bt_Print, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(215, 215, 215))
+                        .addComponent(Bt_Drop, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(Bt_Print, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(210, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -235,41 +287,42 @@ private Connection conn;
         int selectedId = (int) tabeldrop.getValueAt(selectedRow, 1);
         boolean success = deleteTransaction(selectedId);
             if (success) {
-                importdb(); 
+            try { 
+                importdb();
+            } catch (SQLException ex) {
+                Logger.getLogger(Drop.class.getName()).log(Level.SEVERE, null, ex);
+            }
             }
     }//GEN-LAST:event_Bt_DropActionPerformed
 
-    private void Tf_searchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Tf_searchActionPerformed
-      
-    }//GEN-LAST:event_Tf_searchActionPerformed
-
     private void Bt_addActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Bt_addActionPerformed
     MainAdd dialog = new MainAdd((Frame) SwingUtilities.getWindowAncestor(this));
+    dialog.setOrderListener(new AddOrder.OrderListener() {
+        @Override
+        public void onOrderSaved() {
+            try {
+                importdb();
+            } catch (SQLException ex) {
+                Logger.getLogger(Drop.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    });
     dialog.setVisible(true);
     
     }//GEN-LAST:event_Bt_addActionPerformed
 
-    private void Tf_searchMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Tf_searchMouseClicked
-        clearsearch();
-    }//GEN-LAST:event_Tf_searchMouseClicked
-
-    private void Lb_SearchMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Lb_SearchMouseClicked
-        performSearch();
-    }//GEN-LAST:event_Lb_SearchMouseClicked
-
-    private void Bt_FcleanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Bt_FcleanActionPerformed
-        Filter1();
-    }//GEN-LAST:event_Bt_FcleanActionPerformed
-    private void Bt_FrgluActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Bt_FrgluActionPerformed
-        Filter2();
-    }//GEN-LAST:event_Bt_FrgluActionPerformed
-
-    private void Bt_FripenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Bt_FripenActionPerformed
-        Filter3();
-    }//GEN-LAST:event_Bt_FripenActionPerformed
+    private void Lb_returnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Lb_returnMouseClicked
+    try {
+        importdb();
+        Lb_return.setVisible(false);
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    }//GEN-LAST:event_Lb_returnMouseClicked
 
     private void Bt_FbagActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Bt_FbagActionPerformed
         Filter4();
+        Lb_return.setVisible(true);
     }//GEN-LAST:event_Bt_FbagActionPerformed
 
     private void Bt_PrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Bt_PrintActionPerformed
@@ -278,46 +331,113 @@ private Connection conn;
 
     private void Bt_FCapActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Bt_FCapActionPerformed
        Filter5();
+       Lb_return.setVisible(true);
     }//GEN-LAST:event_Bt_FCapActionPerformed
+
+    private void Bt_FRipenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Bt_FRipenActionPerformed
+        Filter3();
+        Lb_return.setVisible(true);
+    }//GEN-LAST:event_Bt_FRipenActionPerformed
+
+    private void Bt_FRgluActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Bt_FRgluActionPerformed
+        Filter2();
+        Lb_return.setVisible(true);
+    }//GEN-LAST:event_Bt_FRgluActionPerformed
+
+    private void Bt_FCleaningActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Bt_FCleaningActionPerformed
+        Filter1();
+        Lb_return.setVisible(true);
+    }//GEN-LAST:event_Bt_FCleaningActionPerformed
+
+    private void tabeldropMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabeldropMouseClicked
+        if (evt.getClickCount() == 2) {  
+        int row = tabeldrop.getSelectedRow();
+        if (row >= 0) {  
+            showDetailPesanan(row);
+        } else {
+            JOptionPane.showMessageDialog(this, "Pilih baris terlebih dahulu!");
+        }
+    }
+    }//GEN-LAST:event_tabeldropMouseClicked
     
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Bt_Drop;
     private javax.swing.JButton Bt_FCap;
+    private javax.swing.JButton Bt_FCleaning;
+    private javax.swing.JButton Bt_FRglu;
+    private javax.swing.JButton Bt_FRipen;
     private javax.swing.JButton Bt_Fbag;
-    private javax.swing.JButton Bt_Fclean;
-    private javax.swing.JButton Bt_Frglu;
-    private javax.swing.JButton Bt_Fripen;
     private javax.swing.JButton Bt_Print;
     private javax.swing.JButton Bt_add;
     private javax.swing.JLabel Lb_Drop;
-    private javax.swing.JLabel Lb_Search;
-    private javax.swing.JTextField Tf_search;
+    private javax.swing.JLabel Lb_return;
+    private javax.swing.JPanel Pnl_Search;
     private javax.swing.JButton jButton3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tabeldrop;
     // End of variables declaration//GEN-END:variables
-    public void performSearch() {
-    String searchText = Tf_search.getText().trim();
-    
-    try {
-        if (searchText.isEmpty()) {
-            importdb();
-        } else {
-            search(searchText);
+        
+public void importdb() throws SQLException {
+          LoadData(null);
+    }
+public void showDetailPesanan(int selectedRow) {
+    if (selectedRow >= 0) {
+        DefaultTableModel model = (DefaultTableModel) tabeldrop.getModel();
+        int idTransaksi = (int) model.getValueAt(selectedRow, 1); // Ambil ID Transaksi
+        
+        // Ambil data tambahan dari Map
+        Map<String, String> detailData = additionalOrderData.get(idTransaksi);
+        
+        UpdateOrder dialog = new UpdateOrder(null, true, idTransaksi);
+        dialog.setDataUpdateListener(new DataUpdateListener() {
+                @Override
+                public void onOrderUpdated(int updatedOrderId) {
+                    // Ketika data diupdate, refresh tabel
+                    try {
+                        importdb(); // Memuat ulang data dari database
+                        
+                        // Cari dan pilih kembali row yang diupdate
+                        for (int i = 0; i < tabeldrop.getRowCount(); i++) {
+                            if ((int)tabeldrop.getValueAt(i, 1) == updatedOrderId) {
+                                tabeldrop.setRowSelectionInterval(i, i);
+                                tabeldrop.scrollRectToVisible(tabeldrop.getCellRect(i, 0, true));
+                                break;
+                            }
+                        }
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(Drop.this, 
+                            "Gagal memuat ulang data: " + ex.getMessage(), 
+                            "Error", 
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+        dialog.setNama(model.getValueAt(selectedRow, 2).toString());
+        dialog.setMerk(model.getValueAt(selectedRow, 4).toString());
+        dialog.setLayanan(model.getValueAt(selectedRow, 7).toString());
+        
+        // Set data tambahan
+        if (detailData != null) {
+            dialog.setTotal(detailData.get("total"));
+            dialog.setCatatan(detailData.get("Ctt"));
+            dialog.setStatus(detailData.get("status"));
+            dialog.setEstimasi(detailData.get("Est"));
         }
-    } catch (Exception e) {
-        // Handle error (log it and/or show to user)
-        JOptionPane.showMessageDialog(null, 
-            "Error performing search: " + e.getMessage(),
-            "Search Error", 
-            JOptionPane.ERROR_MESSAGE);
-    } finally {
-        clearsearch();
+        
+        dialog.setVisible(true);
+        
+    } else {
+        JOptionPane.showMessageDialog(this, "Pilih baris terlebih dahulu!");
     }
 }
-    public void importdb() {
-        DefaultTableModel model = new DefaultTableModel();
+private void LoadData(String filterCondition){
+    DefaultTableModel model = new DefaultTableModel(){
+        @Override
+        public boolean isCellEditable(int row, int column) {
+        return false;  // Non-aktifkan edit sel
+    }
+};
         model.setRowCount(0); 
         model.addColumn("No");
         model.addColumn("ID Transaksi");
@@ -327,18 +447,26 @@ private Connection conn;
         model.addColumn("Service");
         model.addColumn("Time");
         model.addColumn("Type");
+        additionalOrderData.clear();
+        Map<Integer, Map<String, String>> additionalData = new HashMap<>();
         
         try {
-            Connection con = Connector.getkoneksi();
+            Connection con = ConnectorH.getConnection();
             Statement ps = con.createStatement();
-            String query = "SELECT t.id_transaksi, p.nama_pelanggan, pe.no_hp, p.nama_barang, k.nama, t.waktu,  p.layanan"
-                         + " From transaksipemesanan t\n" +
-                           "LEFT JOIN pesanan p ON t.id_transaksi = p.id_transaksi\n" +
-                           "LEFT JOIN pelanggan pe ON t.id_pelanggan = pe.id_pelanggan\n" +
-                           "LEFT JOIN karyawan k ON t.id_karyawan = k.id_karyawan;"; // buat query buat nampilin data pelanggan
-            ResultSet rs = ps.executeQuery(query);
+            String baseQuery = "SELECT t.id_transaksi, p.nama_pelanggan, pe.no_hp, p.nama_barang, k.nama, t.waktu,  "
+                              + "p.layanan, p.catatan_pelanggan, p.status_pemesanan, p.tanggal_selesai, t.total\n" +
+                                "From pesanan p\n" +
+                                "LEFT JOIN transaksipemesanan t ON t.id_transaksi = p.id_transaksi\n" +
+                                "LEFT JOIN pelanggan pe ON p.id_pelanggan = pe.id_pelanggan\n" +
+                                "LEFT JOIN karyawan k ON t.id_karyawan = k.id_karyawan"; // buat query buat nampilin data pelanggan
+            if (filterCondition != null) {
+            baseQuery += " WHERE " + filterCondition;
+    }
+            
+            ResultSet rs = ps.executeQuery(baseQuery);
             int Nomer = 1;
             while(rs.next()) {
+                
                 int Id = rs.getInt("id_transaksi");
                 String Nama = rs.getString("nama_pelanggan");
                 String Telp = rs.getString("no_hp");
@@ -346,9 +474,22 @@ private Connection conn;
                 String petugas = rs.getString("nama");
                 String Waktu = rs.getString("waktu");
                 String Type = rs.getString("layanan");
+                String Ctt = rs.getString("catatan_pelanggan");
+                String total = rs.getString("total");
+                String status = rs.getString("status_pemesanan");
+                String Est = rs.getString("tanggal_selesai");
+               
                 model.addRow(new Object[]{Nomer, Id, Nama, Telp, Merek, petugas, Waktu, Type});
+                
+                Map<String, String> detailData = new HashMap<>();
+                detailData.put("Ctt", Ctt);
+                detailData.put("total", total);
+                detailData.put("status", status);
+                detailData.put("Est", Est);
+                additionalData.put(Id, detailData);
                 Nomer++;
             }
+            this.additionalOrderData = additionalData;
             tabeldrop.setModel(model); 
             
             DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -363,320 +504,78 @@ private Connection conn;
         }
         tabeldrop.setModel(model); 
         tabeldrop.revalidate();    
-        tabeldrop.repaint();  
-    }
-private void search(String searchText) {
-    DefaultTableModel model = new DefaultTableModel();
-    model.addColumn("No");
-    model.addColumn("ID Transaksi");
-    model.addColumn("Nama");
-    model.addColumn("No.Handphone");
-    model.addColumn("Merk");
-    model.addColumn("Service");
-    model.addColumn("Time");
-    model.addColumn("Type");
+        tabeldrop.repaint();
+}
+private void search(String searchText) throws SQLException {
+    importdb(); 
     
-    String query = "SELECT t.id_transaksi, p.nama_pelanggan, pe.no_hp, p.nama_barang, k.nama, t.waktu, p.layanan "
-                 + "FROM transaksipemesanan t "
-                 + "LEFT JOIN pesanan p ON t.id_transaksi = p.id_transaksi "
-                 + "LEFT JOIN pelanggan pe ON t.id_pelanggan = pe.id_pelanggan "
-                 + "LEFT JOIN karyawan k ON t.id_karyawan = k.id_karyawan "
-                 + "WHERE p.Barcode LIKE ?";
-
-    try (Connection con = Connector.getkoneksi();
-         PreparedStatement ps = con.prepareStatement(query)) {
+    if (searchText == null || searchText.trim().isEmpty()) {
+        return;
+    }
+    try {
         
-        ps.setString(1, "%" + searchText + "%");
+        String query = "SELECT t.id_transaksi FROM pesanan p " +
+                       "LEFT JOIN transaksipemesanan t ON t.id_transaksi = p.id_transaksi " +
+                       "WHERE p.Barcode LIKE ?";
         
-        try (ResultSet rs = ps.executeQuery()) {
-            int nomer = 1;
-            while (rs.next()) {
-                model.addRow(new Object[]{
-                    nomer++,
-                    rs.getInt("id_transaksi"),
-                    rs.getString("nama_pelanggan"),
-                    rs.getString("no_hp"),
-                    rs.getString("nama_barang"),
-                    rs.getString("nama"),
-                    rs.getString("waktu"),
-                    rs.getString("layanan")
-                });
+        try (Connection con = ConnectorH.getConnection();
+             PreparedStatement ps = con.prepareStatement(query)) {
+            
+            ps.setString(1, "%" + searchText + "%");
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int idTransaksi = rs.getInt("id_transaksi");
+                    
+                    DefaultTableModel model = (DefaultTableModel) tabeldrop.getModel();
+                    for (int i = 0; i < model.getRowCount(); i++) {
+                        int idInTable = (int) model.getValueAt(i, 1); // Kolom 1 adalah ID Transaksi
+                        
+                        if (idInTable == idTransaksi) {
+                            tabeldrop.setRowSelectionInterval(i, i);
+                            tabeldrop.scrollRectToVisible(tabeldrop.getCellRect(i, 0, true));
+                            showDetailPesanan(i);
+                            break;
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Data tidak ditemukan", 
+                        "Pencarian", JOptionPane.INFORMATION_MESSAGE);
+                }
             }
         }
-        
-        tabeldrop.setModel(model);
-        
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        
-        for (int i = 0; i < tabeldrop.getColumnCount(); i++) {
-            tabeldrop.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-        
     } catch (SQLException e) {
-        // Consider proper error handling/logging
         JOptionPane.showMessageDialog(null, "Error searching data: " + e.getMessage(), 
             "Error", JOptionPane.ERROR_MESSAGE);
         e.printStackTrace();
     }
 }
 private void Filter1(){
-        DefaultTableModel model = new DefaultTableModel();
-        model.addColumn("No");
-        model.addColumn("ID Transaksi");
-        model.addColumn("Nama");
-        model.addColumn("No.Handphone");
-        model.addColumn("Merk");
-        model.addColumn("Service");
-        model.addColumn("Time");
-        model.addColumn("Type");
-        
-        
-        try {
-            Connection con = Connector.getkoneksi();
-            Statement ps = con.createStatement();
-            String query = "SELECT t.id_transaksi, p.nama_pelanggan, pe.no_hp, p.nama_barang, k.nama, t.waktu, p.layanan\n" +
-"FROM transaksipemesanan t\n" +
-"LEFT JOIN pesanan p ON t.id_transaksi = p.id_transaksi\n" +
-"LEFT JOIN pelanggan pe ON t.id_pelanggan = pe.id_pelanggan\n" +
-"LEFT JOIN karyawan k ON t.id_karyawan = k.id_karyawan\n" +
-"WHERE p.layanan LIKE '%Cleaning(R%'\n" +
-"OR p.layanan LIKE '%Cleaning(U%'\n" +
-"OR p.layanan LIKE '%Cleaning(W%';";
-                    
-            ResultSet rs = ps.executeQuery(query);
-            int nomer = 1;
-            while(rs.next()) {
-            model.addRow(new Object[]{
-                nomer++,
-                rs.getString("id_transaksi"),
-                rs.getString("nama_pelanggan"),
-                rs.getString("no_hp"),
-                rs.getString("nama_barang"),
-                rs.getString("nama"),
-                rs.getString("waktu"),
-                rs.getString("layanan")
-            });
-        }
-        tabeldrop.setModel(model);
-        
-        
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-        
-        for (int i = 0; i < tabeldrop.getColumnCount(); i++) {
-            tabeldrop.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-        
-    } catch (Exception e) {
-        System.out.println("Gagal menampilkan data: " + e.getMessage());
-    }  
-    }
+        String condition = "p.layanan LIKE '%Cleaning(R%' OR p.layanan LIKE '%Cleaning(U%' " +
+                           "OR p.layanan LIKE '%Cleaning(W%' OR p.layanan LIKE '%Cleaning(D%'";
+        LoadData(condition); 
+}
 private void Filter2(){
-        DefaultTableModel model = new DefaultTableModel();
-        model.addColumn("No"); 
-        model.addColumn("ID Transaksi");
-        model.addColumn("Nama");
-        model.addColumn("No.Handphone");
-        model.addColumn("Merk");
-        model.addColumn("Service");
-        model.addColumn("Time");
-        model.addColumn("Type");
-        
-        
-        try {
-            Connection con = Connector.getkoneksi();
-            Statement ps = con.createStatement();
-            String query = "SELECT t.id_transaksi, p.nama_pelanggan, pe.no_hp, p.nama_barang, k.nama, t.waktu, p.layanan\n" +
-"FROM transaksipemesanan t\n" +
-"LEFT JOIN pesanan p ON t.id_transaksi = p.id_transaksi\n" +
-"LEFT JOIN pelanggan pe ON t.id_pelanggan = pe.id_pelanggan\n" +
-"LEFT JOIN karyawan k ON t.id_karyawan = k.id_karyawan\n" +
-"WHERE p.layanan LIKE '%Reglue(S%'\n" +
-"OR p.layanan LIKE '%Reglue(M%'\n" +
-"OR p.layanan LIKE '%Reglue(H%'\n" +
-"OR p.layanan LIKE '%Reglue(T%';";
-                    
-            ResultSet rs = ps.executeQuery(query);
-            int nomer = 1;
-            while(rs.next()) {
-            model.addRow(new Object[]{
-                nomer++,
-                rs.getString("id_transaksi"),
-                rs.getString("nama_pelanggan"),
-                rs.getString("no_hp"),
-                rs.getString("nama_barang"),
-                rs.getString("nama"),
-                rs.getString("waktu"),
-                rs.getString("layanan")
-            });
-        }
-        tabeldrop.setModel(model);
-        
-        
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-        
-        for (int i = 0; i < tabeldrop.getColumnCount(); i++) {
-            tabeldrop.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-        
-    } catch (Exception e) {
-        System.out.println("Gagal menampilkan data: " + e.getMessage());
-    }  
-    }
+    String condition = "p.layanan LIKE '%Reglue(S%'\n" +
+                        "OR p.layanan LIKE '%Reglue(M%'\n" +
+                        "OR p.layanan LIKE '%Reglue(H%'\n" +
+                        "OR p.layanan LIKE '%Reglue(T%'";
+        LoadData(condition);     
+     }
 private void Filter3(){
-        DefaultTableModel model = new DefaultTableModel();
-        model.addColumn("No"); 
-        model.addColumn("ID Transaksi");
-        model.addColumn("Nama");
-        model.addColumn("No.Handphone");
-        model.addColumn("Merk");
-        model.addColumn("Service");
-        model.addColumn("Time");
-        model.addColumn("Type");
-        
-        
-        try {
-            Connection con = Connector.getkoneksi();
-            Statement ps = con.createStatement();
-            String query = "SELECT t.id_transaksi, p.nama_pelanggan, pe.no_hp, p.nama_barang, k.nama, t.waktu, p.layanan\n" +
-"FROM transaksipemesanan t\n" +
-"LEFT JOIN pesanan p ON t.id_transaksi = p.id_transaksi\n" +
-"LEFT JOIN pelanggan pe ON t.id_pelanggan = pe.id_pelanggan\n" +
-"LEFT JOIN karyawan k ON t.id_karyawan = k.id_karyawan\n" +
-"WHERE p.layanan LIKE '%Repaint(M%'\n" +
-"OR p.layanan LIKE '%Repaint(U%';";
-                    
-            ResultSet rs = ps.executeQuery(query);
-            int nomer = 1;
-            while(rs.next()) {
-            model.addRow(new Object[]{
-                nomer++,
-                rs.getString("id_transaksi"),
-                rs.getString("nama_pelanggan"),
-                rs.getString("no_hp"),
-                rs.getString("nama_barang"),
-                rs.getString("nama"),
-                rs.getString("waktu"),
-                rs.getString("layanan")
-            });
-        }
-        tabeldrop.setModel(model);
-        
-        
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-        
-        for (int i = 0; i < tabeldrop.getColumnCount(); i++) {
-            tabeldrop.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-        
-    } catch (Exception e) {
-        System.out.println("Gagal menampilkan data: " + e.getMessage());
-    }  
-    }
+    String condition = "p.layanan LIKE '%Repaint(M%'\n" +
+                    "OR p.layanan LIKE '%Repaint(U%'";
+    LoadData(condition);
+}
 private void Filter4(){
-        DefaultTableModel model = new DefaultTableModel();
-        model.addColumn("No"); 
-        model.addColumn("ID Transaksi");
-        model.addColumn("Nama");
-        model.addColumn("No.Handphone");
-        model.addColumn("Merk");
-        model.addColumn("Service");
-        model.addColumn("Time");
-        model.addColumn("Type");
-        
-        
-        try {
-            Connection con = Connector.getkoneksi();
-            Statement ps = con.createStatement();
-            String query = "SELECT t.id_transaksi, p.nama_pelanggan, pe.no_hp, p.nama_barang, k.nama, t.waktu, p.layanan\n" +
-"FROM transaksipemesanan t\n" +
-"LEFT JOIN pesanan p ON t.id_transaksi = p.id_transaksi\n" +
-"LEFT JOIN pelanggan pe ON t.id_pelanggan = pe.id_pelanggan\n" +
-"LEFT JOIN karyawan k ON t.id_karyawan = k.id_karyawan\n" +
-"WHERE p.layanan LIKE '%Bag(M%'\n" +
-"OR p.layanan LIKE '%Bag(S%';";
-                    
-            ResultSet rs = ps.executeQuery(query);
-            int nomer = 1;
-            while(rs.next()) {
-            model.addRow(new Object[]{
-                nomer++,
-                rs.getString("id_transaksi"),
-                rs.getString("nama_pelanggan"),
-                rs.getString("no_hp"),
-                rs.getString("nama_barang"),
-                rs.getString("nama"),
-                rs.getString("waktu"),
-                rs.getString("layanan")
-            });
-        }
-        tabeldrop.setModel(model);
-        
-        
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-        
-        for (int i = 0; i < tabeldrop.getColumnCount(); i++) {
-            tabeldrop.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-        
-    } catch (Exception e) {
-        System.out.println("Gagal menampilkan data: " + e.getMessage());
-    }  
+    String condition = "p.layanan LIKE '%Bag(M%'\n" +
+                       "OR p.layanan LIKE '%Bag(S%'";
+    LoadData(condition);
     }
 private void Filter5(){
-        DefaultTableModel model = new DefaultTableModel();
-        model.addColumn("No");
-        model.addColumn("ID Transaksi");
-        model.addColumn("Nama");
-        model.addColumn("No.Handphone");
-        model.addColumn("Merk");
-        model.addColumn("Service");
-        model.addColumn("Time");
-        model.addColumn("Type");
-        
-        
-        try {
-            Connection con = Connector.getkoneksi();
-            Statement ps = con.createStatement();
-            String query = "SELECT t.id_transaksi, p.nama_pelanggan, pe.no_hp, p.nama_barang, k.nama, t.waktu, p.layanan\n" +
-"FROM transaksipemesanan t\n" +
-"LEFT JOIN pesanan p ON t.id_transaksi = p.id_transaksi\n" +
-"LEFT JOIN pelanggan pe ON t.id_pelanggan = pe.id_pelanggan\n" +
-"LEFT JOIN karyawan k ON t.id_karyawan = k.id_karyawan\n" +
-"WHERE p.layanan LIKE '%Cap(R%'\n" +
-"OR p.layanan LIKE '%Cleaning(W%';";
-                    
-            ResultSet rs = ps.executeQuery(query);
-            int nomer = 1;
-            while(rs.next()) {
-            model.addRow(new Object[]{
-                nomer++,
-                rs.getString("id_transaksi"),
-                rs.getString("nama_pelanggan"),
-                rs.getString("no_hp"),
-                rs.getString("nama_barang"),
-                rs.getString("nama"),
-                rs.getString("waktu"),
-                rs.getString("layanan")
-            });
-        }
-        tabeldrop.setModel(model);
-        
-        
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-        
-        for (int i = 0; i < tabeldrop.getColumnCount(); i++) {
-            tabeldrop.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-        
-    } catch (Exception e) {
-        System.out.println("Gagal menampilkan data: " + e.getMessage());
-    }  
+    String condition = "p.layanan LIKE '%Cap(C%'\n" +
+                       "OR p.layanan LIKE '%Cap(R%'";
+    LoadData(condition);
     }
 private void cetakStruk() {
     int selectedRow = tabeldrop.getSelectedRow();
@@ -688,10 +587,9 @@ private void cetakStruk() {
     String idTransaksi = tabeldrop.getValueAt(selectedRow, 1).toString(); // kolom pertama id_transaksi
 
     try {
-        // Ganti URL, user, dan password sesuai konfigurasi database kamu
-        Connection conn = Connector.getkoneksi();
+        Connection conn = ConnectorH.getConnection();
 
-        String path = "src/Custom/Setruk.jasper"; // path ke file .jasper kamu
+        String path = "src/Custom/StrukPesanan.jasper";
 
         HashMap<String, Object> parameter = new HashMap<>();
         parameter.put("id_transaksi", idTransaksi);
@@ -708,19 +606,19 @@ public boolean deleteTransaction(int idTransaksi) {
     
     int confirm = JOptionPane.showConfirmDialog(
         null,
-        "Are you sure you want to delete transaction ID: " + idTransaksi + "?",
-        "Confirm Deletion",
+        "Apakah yakin ingin menghapus pesanan dengan Id Transaksi " + idTransaksi + "?",
+        "Konfirmasi Penghapusan",
         JOptionPane.YES_NO_OPTION,
         JOptionPane.WARNING_MESSAGE
     );
 
     if (confirm != JOptionPane.YES_OPTION) {
-        return false; // User cancelled the deletion
+        return false; 
     }
 
     String sql = "DELETE FROM transaksipemesanan WHERE id_transaksi = ?";
     
-    try (Connection conn = Connector.getkoneksi();
+    try (Connection conn = ConnectorH.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
         
         pstmt.setInt(1, idTransaksi);
@@ -729,16 +627,16 @@ public boolean deleteTransaction(int idTransaksi) {
         if (affectedRows > 0) {
             JOptionPane.showMessageDialog(
                 null,
-                "Transaction ID " + idTransaksi + " deleted successfully!",
-                "Success",
+                "Id Transaksi " + idTransaksi + " dihapus",
+                "Berhasil!",
                 JOptionPane.INFORMATION_MESSAGE
             );
             return true;
         } else {
             JOptionPane.showMessageDialog(
                 null,
-                "Transaction ID " + idTransaksi + " not found!",
-                "Not Found",
+                "Id Transaksi " + idTransaksi + " tidak ditemukan!",
+                "??????",
                 JOptionPane.WARNING_MESSAGE
             );
             return false;
@@ -750,12 +648,10 @@ public boolean deleteTransaction(int idTransaksi) {
             "Database Error",
             JOptionPane.ERROR_MESSAGE
         );
-        // Log the full error for debugging
         e.printStackTrace();
         return false;
     }
 }
-private void clearsearch(){
-        Tf_search.setText("");
+private void clearsearch(){ 
     }
 }
